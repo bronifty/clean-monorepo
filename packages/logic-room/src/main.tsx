@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
-import { Root } from "./routes/root";
+import { Layout } from "./routes/Layout";
 import { Index } from "./routes/index";
 import ErrorPage from "./error-page";
 import { BooksLayout, DescendantsLayout } from "./components";
@@ -10,7 +10,7 @@ import { BooksLayout, DescendantsLayout } from "./components";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Root />,
+    element: <Layout />,
     errorElement: <ErrorPage />,
     children: [
       {

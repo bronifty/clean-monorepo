@@ -2,7 +2,7 @@ import React from "react";
 import "./Layout.css";
 import { Outlet } from "react-router-dom";
 
-export function Root() {
+export function Layout() {
   return (
     <div className="container">
       <nav className="navbar">
