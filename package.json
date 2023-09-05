@@ -1,5 +1,5 @@
 {
-  "name": "demo-mfe",
+  "name": "clean-reactive-monorepo",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
@@ -7,9 +7,9 @@
   ],
   "scripts": {
     "clean": "rm -rf node_modules packages/**/node_modules packages/**/build packages/**/dist",
+    "dev": "concurrently \"wsrun --parallel dev\"",
     "build": "wsrun -s build",
-    "start": "concurrently \"wsrun --parallel start\"",
-    "dev": "concurrently \"wsrun --parallel dev\""
+    "start": "concurrently \"wsrun --parallel start\""
   },
   "dependencies": {
     "concurrently": "^5.2.0",
