@@ -25,6 +25,10 @@ export class Observable implements IObservable {
   // 2. parent.compute() calls parent._valueFn(...parent._valueFnArgs)
   // 3. parent._valueFn contains child.value, which is called as get value() or the get accessor of the child. Now we have pushed the child observable's get accessor method on top of the call stack, right above the parent's compute method
   // 4. before we access the child's value to return it to the parent's compute function (the call site or calling code), we check to see if the child observable itself is a dependency on the parent's own _dependencyArray, which is accessed as a property of the global aka "static" member of the observable class "_computeActive", to which the parent is assigned (the parent observable is equal to "_computeActive" and its property "_dependencyArray" is accessed via _computeActive._dependencyArray; the way to signify accessing the global or "static" property, which is assigned to an object, and its property is by referencing the name of the observable class as a prefix like so: Observable._computeActive._dependencyArray).
+  // 5. If the child is not already on the static Observable._computeActive._dependencyArray to which the parent is assigned (in other words, the parent's dependency array, which is accessed by the child on the call stack via making it a global or static), we push it on there.
+  // 6. child.value is returned to the call site or calling code (parent.compute()); if it's a Promise, handle that.
+  // 7. loop over the parent's _dependencyArray and subscribe each child to teh compute method of the parent (bindComputedObservable function)
+  // 8. nullify the _dependencyArray
 
   constructor(init: Function | any, ...args: any[]) {
     if (typeof init === "function") {
