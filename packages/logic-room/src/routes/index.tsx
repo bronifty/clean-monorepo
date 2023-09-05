@@ -1,9 +1,9 @@
-import { Button, CounterButton } from "ui/src/components";
+import { Header, CounterButton } from "ui/src/components";
 
 export function Index() {
   return (
     <div>
-      <Button />
+      <Header />
       <CounterButton />
     </div>
   );
