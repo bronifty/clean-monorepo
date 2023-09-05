@@ -1,4 +1,4 @@
-class HttpGateway {
+export class HttpGateway {
   data = [
     { name: "Book 1", author: "Author 1" },
     { name: "Book 2", author: "Author 2" },

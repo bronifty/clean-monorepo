@@ -1,6 +1,6 @@
 import React from "react";
 import Form from "./Form";
-import { booksChild } from "../utils/store";
+import { booksChild } from "../utils/store"; // observable data
 
 export function BooksComposer() {
   const data = booksChild;
