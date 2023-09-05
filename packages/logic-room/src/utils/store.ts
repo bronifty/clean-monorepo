@@ -1,5 +1,3 @@
-// import { ObservableFactory, IObservable } from "./observable";
-
 import {
   ObservableFactory,
   IObservable,
