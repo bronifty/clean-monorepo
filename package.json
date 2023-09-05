@@ -6,7 +6,7 @@
     "packages/*"
   ],
   "scripts": {
-    "wipe": "rm -rf node_modules packages/**/node_modules packages/**/build packages/**/dist",
+    "clean": "rm -rf node_modules packages/**/node_modules packages/**/build packages/**/dist",
     "build": "wsrun -s build",
     "start": "concurrently \"wsrun --parallel start\"",
     "dev": "concurrently \"wsrun --parallel dev\""
