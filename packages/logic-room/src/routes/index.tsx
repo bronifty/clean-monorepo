@@ -1,4 +1,4 @@
-import { Button, CounterButton } from "ui";
+import { Button, CounterButton } from "ui/src/components";
 
 export function Index() {
   return (
