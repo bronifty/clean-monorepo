@@ -4,7 +4,7 @@ import { booksChild } from "../utils/store";
 
 export function BooksComposer() {
   const data = booksChild;
-  const title = "booksChild";
+  const title = "booksComposer same as booksChild data";
   const [dataValue, setDataValue] = React.useState(data.value);
   React.useEffect(() => {
     const dataSubscription = data.subscribe((value) => {
