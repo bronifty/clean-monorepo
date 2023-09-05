@@ -8,7 +8,8 @@
   "scripts": {
     "wipe": "rm -rf node_modules packages/**/node_modules packages/**/build packages/**/dist",
     "build": "wsrun -s build",
-    "start": "concurrently \"wsrun --parallel start\""
+    "start": "concurrently \"wsrun --parallel start\"",
+    "dev": "concurrently \"wsrun --parallel dev\""
   },
   "dependencies": {
     "concurrently": "^5.2.0",

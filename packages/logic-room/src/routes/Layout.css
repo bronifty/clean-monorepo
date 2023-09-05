@@ -1,0 +1,30 @@
+:root {
+  --primary-color: hsl(204, 20%, 5%);
+}
+
+.container {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  width: 100vw;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-around;
+  background-color: var(--primary-color);
+  padding: 1rem;
+  width: 100%; /* This will make the navbar span the entire width */
+  height: 60px; /* This will keep the height fixed. Adjust as needed */
+  box-sizing: border-box; /* This ensures padding and border are included in the height and width */
+}
+
+.content {
+  padding: 1rem;
+}
+
+.footer {
+  background-color: var(--primary-color);
+  text-align: center;
+  padding: 1rem;
+}
