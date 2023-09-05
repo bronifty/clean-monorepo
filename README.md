@@ -12,7 +12,7 @@
  // ...
 }
 
-// monorepo/packages/ui/package.json
+// monorepo/packages/consumer-web-app/package.json
 {
   "name": "consumer-web-app",
   // ...
