@@ -7,8 +7,8 @@ export function Root() {
     <div className="container">
       <nav className="navbar">
         <a href="/">Home</a>
-        <a href="/books">Books</a>
         <a href="/dependents">Dependents</a>
+        <a href="/books">Books</a>
       </nav>
       <main className="content">
         <Outlet />

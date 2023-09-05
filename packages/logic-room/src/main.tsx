@@ -18,12 +18,12 @@ const router = createBrowserRouter([
         element: <Index />,
       },
       {
-        path: "books/",
-        element: <BooksLayout />,
-      },
-      {
         path: "dependents/",
         element: <DescendantsLayout />,
+      },
+      {
+        path: "books/",
+        element: <BooksLayout />,
       },
     ],
   },
