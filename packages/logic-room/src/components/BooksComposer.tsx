@@ -2,7 +2,7 @@ import React from "react";
 import Form from "./Form";
 import { booksChild } from "../utils/store";
 
-export function BooksChild() {
+export function BooksComposer() {
   const data = booksChild;
   const title = "booksChild";
   const [dataValue, setDataValue] = React.useState(data.value);

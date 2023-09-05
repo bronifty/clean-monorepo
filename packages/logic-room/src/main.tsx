@@ -5,8 +5,7 @@ import "./index.css";
 import { Root } from "./routes/root";
 import { Index } from "./routes/index";
 import ErrorPage from "./error-page";
-import { BooksLayout } from "./components/BooksLayout";
-import { DescendantsLayout } from "./components/DescendantsLayout";
+import { BooksLayout, DescendantsLayout } from "./components";
 
 const router = createBrowserRouter([
   {
