@@ -20,10 +20,7 @@ class BooksRepository implements IBooksRepository {
     this._state = init;
   }
   subscribe = (callback: (value: any) => void): (() => void) => {
-    const unsubscribe = this._state.subscribe(callback);
-    console.log(`this._state: ${JSON.stringify(this._state, null, 2)}`);
-    console.log(`unsubscribe: ${JSON.stringify(unsubscribe, null, 2)}`);
-    return unsubscribe;
+    return this._state.subscribe(callback);
   };
   publish = () => {
     this._state.publish();
