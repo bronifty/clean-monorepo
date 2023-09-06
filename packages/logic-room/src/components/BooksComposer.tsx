@@ -29,38 +29,7 @@ class BooksRepository implements IBooksRepository {
     this._state.value = [...this._state.value, data];
   };
   delete = (idx) => {
-    this._state.value.splice(idx, 1);
-  };
-
-  load = () => {
-    // Load data from API
-  };
-  getBooks = async (callback) => {
-    this._state.subscribe(callback);
-    await this.loadApiData();
-    this._state.publish();
-  };
-  addBook = async (fields) => {
-    await this.postApiData(fields);
-    await this.loadApiData();
-    this._state.publish();
-  };
-  removeBooks = async () => {
-    await this.deleteApiData();
-    await this.loadApiData();
-    this._state.publish();
-  };
-  loadApiData = async () => {
-    const booksDto = await httpGateway.get(this.apiUrl + "books");
-    this._state.value = booksDto.result.map((bookDto) => {
-      return bookDto;
-    });
-  };
-  postApiData = async (fields) => {
-    await httpGateway.post(this.apiUrl + "books", fields);
-  };
-  deleteApiData = async () => {
-    await httpGateway.delete(this.apiUrl + "reset");
+    this._state.value = this._state.value.splice(idx, 1);
   };
 }
 const booksRepository = new BooksRepository(booksChild);
@@ -76,10 +45,10 @@ export class BooksPresenter {
     return unload;
   };
   post = async (fields) => {
-    await booksRepository.addBook(fields);
+    booksRepository.post(fields);
   };
   delete = async () => {
-    await booksRepository.removeBooks();
+    booksRepository.delete(1);
   };
 }
 
@@ -102,6 +71,7 @@ export function BooksComposer() {
       <h2>{title}</h2>
       <div>{JSON.stringify(dataValue, null, 2)}</div>
       <Form data={data} />
+      <button onClick={() => presenter.delete()}>delete</button>
     </div>
   );
 }
