@@ -3,11 +3,10 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./index.css";
 import { Layout } from "./routes/Layout";
-import { Index } from "./routes/index";
+import { Index } from "./routes/Index";
 import ErrorPage from "./error-page";
 import { BooksLayout, DescendantsLayout } from "./components";
-import { BooksComposerLayout } from "./components/BooksComposerLayout";
-import { booksChild } from "./utils/store";
+import { BooksComposerLayout } from "./components/BooksComposer";
 
 const router = createBrowserRouter([
   {

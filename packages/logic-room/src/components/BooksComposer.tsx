@@ -1,6 +1,11 @@
 import React from "react";
 import { Form, MapWithDeleteBtns } from "ui/src/components";
-import { booksChild, IObservable } from "../utils/store"; // observable data
+import {
+  IObservable,
+  booksChild,
+  booksParent,
+  booksGrandParent,
+} from "../utils/store"; // observable data
 interface IRepository {
   subscribe(callback: Function): Function;
   publish(): void;
