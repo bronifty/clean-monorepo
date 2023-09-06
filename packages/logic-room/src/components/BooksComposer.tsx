@@ -29,7 +29,10 @@ class BooksRepository implements IBooksRepository {
     this._state.value = [...this._state.value, data];
   };
   delete = (idx) => {
-    this._state.value = this._state.value.splice(idx, 1);
+    this._state.value = [
+      ...this._state.value.slice(0, idx),
+      ...this._state.value.slice(idx + 1),
+    ];
   };
 }
 const booksRepository = new BooksRepository(booksChild);
@@ -47,8 +50,8 @@ export class BooksPresenter {
   post = async (fields) => {
     booksRepository.post(fields);
   };
-  delete = async () => {
-    booksRepository.delete(1);
+  delete = async (idx) => {
+    booksRepository.delete(idx);
   };
 }
 
@@ -69,7 +72,17 @@ export function BooksComposer() {
   return (
     <div>
       <h2>{title}</h2>
-      <div>{JSON.stringify(dataValue, null, 2)}</div>
+      <div>
+        {dataValue?.map((val, idx) => (
+          <>
+            <div key={idx}>
+              <span>{val.name}</span> |<span>{val.author}</span>
+            </div>
+            <button onClick={() => presenter.delete(idx)}>Delete</button>
+          </>
+        ))}
+      </div>
+      {/* <div>{JSON.stringify(dataValue, null, 2)}</div> */}
       <Form data={data} />
       <button onClick={() => presenter.delete()}>delete</button>
     </div>
