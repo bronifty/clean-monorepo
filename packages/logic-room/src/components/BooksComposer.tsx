@@ -6,7 +6,6 @@ import {
   booksParent,
   booksGrandParent,
 } from "../utils/store"; // observable data
-
 export interface IDatabase {
   data: DatabaseDataType;
   getData(): DatabaseDataType;
@@ -39,7 +38,6 @@ const initialData = [
   { name: "Book 2", author: "Author 2" },
 ];
 const booksDatabase = DatabaseFactory.createDatabase(initialData);
-
 export interface IHttpGateway {
   get(path: string): { result: { name: string; author: string }[] };
   post(
@@ -71,7 +69,6 @@ export class HttpGatewayFactory {
   }
 }
 const booksHttpGateway = HttpGatewayFactory.createHttpGateway(booksDatabase);
-
 interface IRepository {
   subscribe(callback: Function): Function;
   publish(): void;
@@ -83,7 +80,6 @@ class Repository implements IRepository {
   private _state: IObservable;
   apiUrl = "fakedata";
   private httpGateway: IHttpGateway;
-
   constructor(init: IObservable, httpGateway: IHttpGateway) {
     this._state = init;
     this.httpGateway = httpGateway;
@@ -116,7 +112,6 @@ export class RepositoryFactory {
     return new Repository(observable, httpGateway);
   }
 }
-
 export interface IPresenter {
   load(callback: (value: any) => void): () => void;
   post(fields: any): Promise<void>;
@@ -145,13 +140,11 @@ export class Presenter implements IPresenter {
     this.booksRepository.delete(idx);
   };
 }
-
 export class PresenterFactory {
   static createPresenter(observable: IObservable): Presenter {
     return new Presenter(observable);
   }
 }
-
 type BooksComposerProps = {
   observable: IObservable;
 };
@@ -175,7 +168,6 @@ export function BooksComposer({ observable }: BooksComposerProps) {
     </div>
   );
 }
-
 export function BooksComposerLayout() {
   return (
     <>
