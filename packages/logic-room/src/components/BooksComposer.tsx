@@ -30,8 +30,6 @@ class Repository implements IRepository {
     ];
   };
 }
-// const booksRepository = new Repository(booksChild);
-
 export interface IPresenter {
   load(callback: (value: any) => void): () => void;
   post(fields: any): Promise<void>;
@@ -39,11 +37,9 @@ export interface IPresenter {
 }
 export class Presenter implements IPresenter {
   private booksRepository: IRepository;
-
   constructor(observable: IObservable) {
     this.booksRepository = new Repository(observable);
   }
-
   load = (callback) => {
     const unload = this.booksRepository.subscribe((repoModel) => {
       const presenterModel = repoModel.map((data) => {
@@ -61,11 +57,9 @@ export class Presenter implements IPresenter {
     this.booksRepository.delete(idx);
   };
 }
-
 type BooksComposerProps = {
   observable: IObservable;
 };
-
 export function BooksComposer({ observable }: BooksComposerProps) {
   const title = "booksComposer same as booksChild data";
   const booksPresenter = new Presenter(observable);
@@ -79,7 +73,6 @@ export function BooksComposer({ observable }: BooksComposerProps) {
       dataSubscription();
     };
   }, []);
-
   return (
     <div>
       <h2>{title}</h2>
