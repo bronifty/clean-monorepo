@@ -25,7 +25,6 @@ export class Observable implements IObservable {
   private _promiseQueue: Array<
     [number, { promise: Promise<any>; clear: () => void }]
   > = [];
-
   private _generationCounter: number = 0;
 
   // private _pendingUpdates: Function[] = [];
@@ -74,40 +73,62 @@ export class Observable implements IObservable {
     if (newVal instanceof Promise) {
       this._generationCounter += 1;
       const currentGeneration = this._generationCounter;
-      this._clearStalePromises();
+      // this._clearStalePromises();
 
       const promiseObject = {
         promise: newVal,
         clear: () => {}, // replace with your clear function
       };
       this._promiseQueue.push([currentGeneration, promiseObject]);
-
-      newVal
+      promiseObject.promise
         .then((resolvedVal) => {
           if (currentGeneration === this._generationCounter) {
+            // This is the latest promise, resolve it
             this._value = resolvedVal;
             this.publish();
           } else {
             // This promise is stale, do nothing
           }
+
+          // Remove this promise from the queue
+          this._promiseQueue = this._promiseQueue.filter(
+            ([generation, _]) => generation !== currentGeneration
+          );
         })
         .catch((error) => {
           console.error("Error resolving value:", error);
+
+          // Remove this promise from the queue
+          this._promiseQueue = this._promiseQueue.filter(
+            ([generation, _]) => generation !== currentGeneration
+          );
         });
+      // newVal
+      //   .then((resolvedVal) => {
+      //     if (currentGeneration === this._generationCounter) {
+      //       this._value = resolvedVal;
+      //       this.publish();
+      //     } else {
+      //       // This promise is stale, do nothing
+      //     }
+      //   })
+      //   .catch((error) => {
+      //     console.error("Error resolving value:", error);
+      //   });
     } else {
       this._value = newVal;
       this.publish();
     }
   }
-  private _clearStalePromises() {
-    while (
-      this._promiseQueue.length > 0 &&
-      this._promiseQueue[0][0] < this._generationCounter
-    ) {
-      const [, { clear }] = this._promiseQueue.shift()!;
-      clear();
-    }
-  }
+  // private _clearStalePromises() {
+  //   while (
+  //     this._promiseQueue.length > 0 &&
+  //     this._promiseQueue[0][0] < this._generationCounter
+  //   ) {
+  //     const [, { clear }] = this._promiseQueue.shift()!;
+  //     clear();
+  //   }
+  // }
   // set value(newVal) {
   //   this._value = newVal;
   //   this.publish();
