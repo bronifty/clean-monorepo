@@ -203,14 +203,14 @@ Deno.test("Test nested async Observables", async () => {
 
   promises.push(
     Observable.delay(3000).promise.then(() => {
-      console.log(`child.value = 22`);
+      console.log(`setting child.value = 22 with a delay of 3000ms`);
       child.value = Observable.delay(3000).promise.then(() => 22);
     })
   );
 
   promises.push(
     Observable.delay(4000).promise.then(() => {
-      console.log(`child.value = 3`);
+      console.log(`setting child.value = 3 with a delay of 10ms`);
       child.value = Observable.delay(10).promise.then(() => 3);
     })
   );
