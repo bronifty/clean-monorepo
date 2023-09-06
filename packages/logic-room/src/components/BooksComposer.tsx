@@ -1,5 +1,5 @@
 import React from "react";
-import { Form } from "ui/src/components";
+import { Form, MapWithDeleteBtns } from "ui/src/components";
 import { booksChild, IObservable } from "../utils/store"; // observable data
 interface IRepository {
   subscribe(callback: Function): Function;
@@ -83,19 +83,8 @@ export function BooksComposer({ observable }: BooksComposerProps) {
   return (
     <div>
       <h2>{title}</h2>
-      <div>
-        {dataValue?.map((val, idx) => (
-          <>
-            <div key={idx}>
-              <span>{val.name}</span> |<span>{val.author}</span>
-            </div>
-            <button onClick={() => booksPresenter.delete(idx)}>Delete</button>
-          </>
-        ))}
-      </div>
-      {/* <div>{JSON.stringify(dataValue, null, 2)}</div> */}
+      <MapWithDeleteBtns dataValue={dataValue} presenter={booksPresenter} />
       <Form data={booksPresenter} />
-      <button onClick={() => booksPresenter.delete()}>delete</button>
     </div>
   );
 }
