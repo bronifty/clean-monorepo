@@ -11,7 +11,7 @@ export function Form({ data }) {
   }
   const handleSubmit = (e) => {
     e.preventDefault();
-    data.value = [...data.value, fields];
+    data.post(fields);
     setFields(defaultValues);
   };
   return (

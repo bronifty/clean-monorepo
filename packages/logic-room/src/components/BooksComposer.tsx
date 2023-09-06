@@ -83,7 +83,7 @@ export function BooksComposer() {
         ))}
       </div>
       {/* <div>{JSON.stringify(dataValue, null, 2)}</div> */}
-      <Form data={data} />
+      <Form data={presenter} />
       <button onClick={() => presenter.delete()}>delete</button>
     </div>
   );
