@@ -1,7 +1,7 @@
 import React from "react";
 import { Form } from "ui/src/components";
 import { booksChild, IObservable } from "../utils/store"; // observable data
-interface IBooksRepository {
+interface IRepository {
   subscribe(callback: Function): Function;
   publish(): void;
   post(data: any): void;
@@ -9,11 +9,11 @@ interface IBooksRepository {
   load(): void;
   // ... other method signatures
 }
-type BooksRepositoryProperties = {
+type RepositoryProperties = {
   _state: IObservable;
   apiUrl: string;
 };
-class BooksRepository implements IBooksRepository {
+class Repository implements IRepository {
   private _state: IObservable;
   apiUrl = "fakedata";
   constructor(init: IObservable) {
@@ -35,7 +35,7 @@ class BooksRepository implements IBooksRepository {
     ];
   };
 }
-const booksRepository = new BooksRepository(booksChild);
+const booksRepository = new Repository(booksChild);
 
 export interface IPresenter {
   load(callback: (value: any) => void): () => void;
@@ -63,11 +63,11 @@ export class Presenter implements IPresenter {
 
 export function BooksComposer() {
   const title = "booksComposer same as booksChild data";
-  const presenter = new Presenter();
+  const booksPresenter = new Presenter();
   const data = booksChild;
   const [dataValue, setDataValue] = React.useState([]);
   React.useEffect(() => {
-    const dataSubscription = presenter.load((value) => {
+    const dataSubscription = booksPresenter.load((value) => {
       setDataValue(value);
     });
     return () => {
@@ -84,13 +84,13 @@ export function BooksComposer() {
             <div key={idx}>
               <span>{val.name}</span> |<span>{val.author}</span>
             </div>
-            <button onClick={() => presenter.delete(idx)}>Delete</button>
+            <button onClick={() => booksPresenter.delete(idx)}>Delete</button>
           </>
         ))}
       </div>
       {/* <div>{JSON.stringify(dataValue, null, 2)}</div> */}
-      <Form data={presenter} />
-      <button onClick={() => presenter.delete()}>delete</button>
+      <Form data={booksPresenter} />
+      <button onClick={() => booksPresenter.delete()}>delete</button>
     </div>
   );
 }
