@@ -6,6 +6,7 @@ import { Layout } from "./routes/Layout";
 import { Index } from "./routes/index";
 import ErrorPage from "./error-page";
 import { BooksLayout, DescendantsLayout, BooksComposer } from "./components";
+import { booksChild } from "./utils/store";
 
 const router = createBrowserRouter([
   {
@@ -27,7 +28,7 @@ const router = createBrowserRouter([
       },
       {
         path: "composer/",
-        element: <BooksComposer />,
+        element: <BooksComposer observable={booksChild} />,
       },
     ],
   },

@@ -7,12 +7,7 @@ interface IRepository {
   post(data: any): void;
   delete(idx: number): void;
   load(): void;
-  // ... other method signatures
 }
-type RepositoryProperties = {
-  _state: IObservable;
-  apiUrl: string;
-};
 class Repository implements IRepository {
   private _state: IObservable;
   apiUrl = "fakedata";
@@ -35,7 +30,7 @@ class Repository implements IRepository {
     ];
   };
 }
-const booksRepository = new Repository(booksChild);
+// const booksRepository = new Repository(booksChild);
 
 export interface IPresenter {
   load(callback: (value: any) => void): () => void;
@@ -43,27 +38,37 @@ export interface IPresenter {
   delete(idx: number): Promise<void>;
 }
 export class Presenter implements IPresenter {
+  private booksRepository: IRepository;
+
+  constructor(observable: IObservable) {
+    this.booksRepository = new Repository(observable);
+  }
+
   load = (callback) => {
-    const unload = booksRepository.subscribe((repoModel) => {
+    const unload = this.booksRepository.subscribe((repoModel) => {
       const presenterModel = repoModel.map((data) => {
         return { name: data.name, author: data.author };
       });
       callback(presenterModel);
     });
-    booksRepository.publish();
+    this.booksRepository.publish();
     return unload;
   };
   post = async (fields) => {
-    booksRepository.post(fields);
+    this.booksRepository.post(fields);
   };
   delete = async (idx) => {
-    booksRepository.delete(idx);
+    this.booksRepository.delete(idx);
   };
 }
 
-export function BooksComposer() {
+interface BooksComposerProps {
+  observable: IObservable;
+}
+
+export function BooksComposer({ observable }: BooksComposerProps) {
   const title = "booksComposer same as booksChild data";
-  const booksPresenter = new Presenter();
+  const booksPresenter = new Presenter(observable);
   const data = booksChild;
   const [dataValue, setDataValue] = React.useState([]);
   React.useEffect(() => {
