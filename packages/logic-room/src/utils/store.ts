@@ -10,7 +10,7 @@ const grandparent = ObservableFactory.create(() => parent.value + 1);
 //   { name: "Book 1", author: "Author 1" },
 //   { name: "Book 2", author: "Author 2" },
 // ]);
-const booksChild = ObservableFactory.create([]);
+const booksChild = ObservableFactory.create(() => []);
 const booksParent = ObservableFactory.create(() => booksChild.value);
 const booksGrandParent = ObservableFactory.create(() => booksParent.value);
 

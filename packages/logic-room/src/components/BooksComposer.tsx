@@ -7,33 +7,40 @@ import {
   booksGrandParent,
 } from "../utils/store"; // observable data
 
-export class Database {
-  data: { name: string; author: string }[] = [
-    { name: "Book 1", author: "Author 1" },
-    { name: "Book 2", author: "Author 2" },
-  ];
-
-  getData(): { name: string; author: string }[] {
+export interface IDatabase {
+  data: DatabaseDataType;
+  getData(): DatabaseDataType;
+  insertData(newData: { name: string; author: string }): void;
+  clearData(): void;
+}
+export type DatabaseDataType = { name: string; author: string }[];
+export class Database implements IDatabase {
+  data: DatabaseDataType;
+  constructor(initialData: DatabaseDataType) {
+    this.data = initialData;
+  }
+  getData(): DatabaseDataType {
     return this.data;
   }
-
   insertData(newData: { name: string; author: string }): void {
     this.data.push(newData);
   }
-
   clearData(): void {
     this.data.length = 0;
   }
 }
-
 export class DatabaseFactory {
-  static createDatabase(): Database {
-    return new Database();
+  static createDatabase(initialData: DatabaseDataType): IDatabase {
+    return new Database(initialData);
   }
 }
+const initialData = [
+  { name: "Book 1", author: "Author 1" },
+  { name: "Book 2", author: "Author 2" },
+];
+const booksDatabase = DatabaseFactory.createDatabase(initialData);
 
 export interface IHttpGateway {
-  data: { name: string; author: string }[];
   get(path: string): { result: { name: string; author: string }[] };
   post(
     path: string,
@@ -41,50 +48,29 @@ export interface IHttpGateway {
   ): { success: boolean };
   delete(path: string): { success: boolean };
 }
-
 export class HttpGateway implements IHttpGateway {
-  private database: Database;
-
-  constructor(database: Database) {
+  private database: IDatabase;
+  constructor(database: IDatabase) {
     this.database = database;
   }
-
-  get data(): { name: string; author: string }[] {
-    return this.database.getData();
-  }
-
   get = (path: string) => {
     return { result: this.database.getData() };
   };
-
   post = (path: string, requestDto: { name: string; author: string }) => {
     this.database.insertData(requestDto);
     return { success: true };
   };
-
   delete = (path: string) => {
     this.database.clearData();
     return { success: true };
   };
 }
-
-// export class HttpGateway implements IHttpGateway {
-//   data = [
-//     { name: "Book 1", author: "Author 1" },
-//     { name: "Book 2", author: "Author 2" },
-//   ];
-//   get = (path) => {
-//     return { result: this.data };
-//   };
-//   post = (path, requestDto) => {
-//     this.data.push(requestDto);
-//     return { success: true };
-//   }; // test
-//   delete = (path) => {
-//     this.data.length = 0;
-//     return { success: true };
-//   };
-// }
+export class HttpGatewayFactory {
+  static createHttpGateway(database: IDatabase): HttpGateway {
+    return new HttpGateway(database);
+  }
+}
+const booksHttpGateway = HttpGatewayFactory.createHttpGateway(booksDatabase);
 
 interface IRepository {
   subscribe(callback: Function): Function;
@@ -96,10 +82,11 @@ interface IRepository {
 class Repository implements IRepository {
   private _state: IObservable;
   apiUrl = "fakedata";
-  private httpGateway = new HttpGateway(DatabaseFactory.createDatabase());
+  private httpGateway: IHttpGateway;
 
-  constructor(init: IObservable) {
+  constructor(init: IObservable, httpGateway: IHttpGateway) {
     this._state = init;
+    this.httpGateway = httpGateway;
   }
   load = () => {
     const response = this.httpGateway.get(this.apiUrl);
@@ -121,6 +108,15 @@ class Repository implements IRepository {
     ];
   };
 }
+export class RepositoryFactory {
+  static createRepository(
+    observable: IObservable,
+    httpGateway: IHttpGateway = booksHttpGateway
+  ): Repository {
+    return new Repository(observable, httpGateway);
+  }
+}
+
 export interface IPresenter {
   load(callback: (value: any) => void): () => void;
   post(fields: any): Promise<void>;
@@ -129,7 +125,7 @@ export interface IPresenter {
 export class Presenter implements IPresenter {
   private booksRepository: IRepository;
   constructor(observable: IObservable) {
-    this.booksRepository = new Repository(observable);
+    this.booksRepository = RepositoryFactory.createRepository(observable);
   }
   load = (callback) => {
     this.booksRepository.load();
@@ -149,13 +145,19 @@ export class Presenter implements IPresenter {
     this.booksRepository.delete(idx);
   };
 }
+
+export class PresenterFactory {
+  static createPresenter(observable: IObservable): Presenter {
+    return new Presenter(observable);
+  }
+}
+
 type BooksComposerProps = {
   observable: IObservable;
 };
 export function BooksComposer({ observable }: BooksComposerProps) {
-  const title = "booksComposer same as booksChild data";
-  const booksPresenter = new Presenter(observable);
-  const data = booksChild;
+  const title = `${observable._valueFn}`;
+  const booksPresenter = PresenterFactory.createPresenter(observable);
   const [dataValue, setDataValue] = React.useState([]);
   React.useEffect(() => {
     const dataSubscription = booksPresenter.load((value) => {
