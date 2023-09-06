@@ -36,7 +36,13 @@ class BooksRepository implements IBooksRepository {
   };
 }
 const booksRepository = new BooksRepository(booksChild);
-export class BooksPresenter {
+
+export interface IPresenter {
+  load(callback: (value: any) => void): () => void;
+  post(fields: any): Promise<void>;
+  delete(idx: number): Promise<void>;
+}
+export class Presenter implements IPresenter {
   load = (callback) => {
     const unload = booksRepository.subscribe((repoModel) => {
       const presenterModel = repoModel.map((data) => {
@@ -57,7 +63,7 @@ export class BooksPresenter {
 
 export function BooksComposer() {
   const title = "booksComposer same as booksChild data";
-  const presenter = new BooksPresenter();
+  const presenter = new Presenter();
   const data = booksChild;
   const [dataValue, setDataValue] = React.useState([]);
   React.useEffect(() => {
