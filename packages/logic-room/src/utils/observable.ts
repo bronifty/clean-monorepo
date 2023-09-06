@@ -1,6 +1,6 @@
 export interface IObservableMethods {
   publish(): void;
-  subscribe(handler: (current: any, previous: any) => void): void;
+  subscribe(handler: Function): void;
   push(item: any): void;
   compute(): void;
 }
@@ -14,18 +14,12 @@ export type IObservable = IObservableMethods & IObservableProperties;
 
 export class Observable implements IObservable {
   private _value: any;
-  private _previousValue: any;
   private _subscribers: Function[] = [];
   private _valueFn: Function | null = null;
   private _valueFnArgs: any[] = [];
   static _computeActive: IObservable | null = null;
-  _dependencyArray: IObservable[] = [];
-  private _lastPromiseId: number = 0;
-  private _isComputing: boolean = false;
-
-  // private _pendingUpdates: Function[] = [];
-  // private _isProcessingUpdates: boolean = false;
   // because _computeActive is static and the parent observable is assigned to it during compute of the parent observable's _valueFn, which returns the child's value via get accessor, where we add the child (in its get accessor during the compute cycle of the parent observable) to the _dependencyArray of the parent observable, we must make _dependencyArray non-private aka public so that it can be accessed by the child via the static -aka global- property _computeActive, to which the parent observable is assigned
+  _dependencyArray: IObservable[] = [];
   // so what that looks like is:
   // 1. parent.compute() assigns parent observable to the global aka "static" member "_computeActive"
   // 2. parent.compute() calls parent._valueFn(...parent._valueFnArgs)
@@ -45,51 +39,22 @@ export class Observable implements IObservable {
       this._value = init;
     }
   }
-  // private processPendingUpdates() {
-  //   if (this._isProcessingUpdates) return;
-  //   this._isProcessingUpdates = true;
-  //   while (this._pendingUpdates.length > 0) {
-  //     const update = this._pendingUpdates.shift();
-  //     if (update) update();
-  //   }
-  //   this._isProcessingUpdates = false;
-  // }
   get value() {
     if (
       Observable._computeActive &&
-      Observable._computeActive !== (this as IObservable) &&
-      !Observable._computeActive._dependencyArray.includes(this as IObservable)
+      Observable._computeActive !== this &&
+      !Observable._computeActive._dependencyArray.includes(this)
     ) {
-      Observable._computeActive._dependencyArray.push(this as IObservable);
+      Observable._computeActive._dependencyArray.push(this);
     }
     return this._value;
   }
   set value(newVal) {
-    this._previousValue = this._value;
-    if (newVal instanceof Promise) {
-      newVal
-        .then((resolvedVal) => {
-          this._value = resolvedVal;
-          this.publish();
-        })
-        .catch((error) => {
-          console.error("Error resolving value:", error);
-        });
-    } else {
+    if (this._value !== newVal) {
       this._value = newVal;
       this.publish();
     }
   }
-
-  // set value(newVal) {
-  //   this._value = newVal;
-  //   this.publish();
-  //   // enqueue calls to publish in case there are async values to prevent stale updates
-  //   // this._pendingUpdates.push(() => {
-  //   // this.publish();
-  //   // });
-  //   // this.processPendingUpdates();
-  // }
   subscribe = (handler: Function) => {
     if (!this._subscribers.includes(handler)) {
       this._subscribers.push(handler);
@@ -103,45 +68,33 @@ export class Observable implements IObservable {
   };
   publish = () => {
     for (const handler of this._subscribers) {
-      handler(this._value, this._previousValue);
+      handler(this.value);
     }
-  };
-  computeHandler = () => {
-    return this.compute();
   };
   compute = () => {
-    if (this._isComputing) {
-      // A computation is already in progress, queue or discard this computation
-      return;
-    }
-
-    this._isComputing = true;
-    Observable._computeActive = this as IObservable;
+    Observable._computeActive = this; // catch child observables having their get accessors called and put them on this.
     const computedValue = this._valueFn
       ? (this._valueFn as Function)(...this._valueFnArgs)
       : null;
 
-    this._lastPromiseId += 1;
-    const currentPromiseId = this._lastPromiseId;
-
-    const handleComputedValue = (resolvedValue: any) => {
-      if (currentPromiseId !== this._lastPromiseId) return; // Ignore stale promises
-      Observable._computeActive = null;
-      this._dependencyArray.forEach((dependency) => {
-        this.bindComputedObservable(dependency);
-      });
-      this._dependencyArray = [];
-      this.value = resolvedValue;
-      this._isComputing = false;
-    };
     if (computedValue instanceof Promise) {
-      computedValue.then(handleComputedValue);
-    } else {
-      handleComputedValue(computedValue);
+      computedValue.then((resolvedValue) => {
+        this._value = resolvedValue;
+      });
     }
+    Observable._computeActive = null;
+    if (computedValue === this._value) {
+      return;
+    }
+    this._dependencyArray.forEach((dependency) => {
+      // dependency.subscribe(() => this.compute());
+      this.bindComputedObservable(dependency);
+    });
+    this._dependencyArray = [];
+    this.value = computedValue;
   };
   private bindComputedObservable = (childObservable: IObservable) => {
-    childObservable.subscribe(this.computeHandler);
+    childObservable.subscribe(() => this.compute());
   };
   push = (item: any) => {
     if (Array.isArray(this._value)) {
@@ -165,3 +118,36 @@ export class ObservableFactory {
     return new Observable(initialValue, ...args);
   }
 }
+
+// function main() {
+//   function childFn() {
+//     return 1;
+//   }
+//   const child = ObservableFactory.create(childFn);
+//   console.log(`child.value: ${JSON.stringify(child.value, null, 2)}`);
+//   function parentFn() {
+//     return child.value + 1;
+//   }
+//   const parent = ObservableFactory.create(parentFn);
+//   console.log(`parent.value: ${JSON.stringify(parent.value, null, 2)}`);
+//   function grandparentFn() {
+//     return parent.value + 1;
+//   }
+//   const grandparent = ObservableFactory.create(grandparentFn);
+//   console.log(
+//     `grandparent.value: ${JSON.stringify(grandparent.value, null, 2)}`
+//   );
+//   parent.subscribe(function (value) {
+//     console.log(
+//       `parent update; current value: ${JSON.stringify(value, null, 2)}`
+//     );
+//   });
+//   grandparent.subscribe(function (value) {
+//     console.log(
+//       `grandparent update; current value: ${JSON.stringify(value, null, 2)}`
+//     );
+//   });
+//   console.log(`child.value = 2`);
+//   child.value = 2;
+// }
+// main();
