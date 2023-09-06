@@ -131,9 +131,10 @@ Deno.test(
   }
 );
 
-Deno.test("Test nested async Observables", async () => {
+Deno.test("cancel stale requests", async () => {
+  // create a child promise with request delay 100ms
   function childFnPromise() {
-    return Observable.delay(1000).promise.then(() => 1);
+    return Observable.delay(100).promise.then(() => 1);
   }
   function parentFn() {
     const childValue = child.value;
@@ -151,11 +152,11 @@ Deno.test("Test nested async Observables", async () => {
       return parentValue + 1;
     }
   }
-
+  // init the child and computed parent observables
   const child = ObservableFactory.create(childFnPromise);
   const parent = ObservableFactory.create(parentFn);
   const grandparent = ObservableFactory.create(grandparentFn);
-
+  // subscribe the console to the observables' updates
   child.subscribe((value: any) => {
     console.log(
       `child update; current value: ${JSON.stringify(value, null, 2)}`
@@ -172,50 +173,42 @@ Deno.test("Test nested async Observables", async () => {
     );
   });
 
-  const promises = [];
-  promises.push(
-    Observable.delay(2000).promise.then(() => {
-      console.log(
-        `child.value after creation: ${JSON.stringify(child.value, null, 2)}`
-      );
-    })
-  );
-
-  promises.push(
-    Observable.delay(2000).promise.then(() => {
-      console.log(
-        `parent.value after creation: ${JSON.stringify(parent.value, null, 2)}`
-      );
-    })
-  );
-
-  promises.push(
-    Observable.delay(2000).promise.then(() => {
-      console.log(
-        `grandparent.value after creation: ${JSON.stringify(
-          grandparent.value,
-          null,
-          2
-        )}`
-      );
-    })
-  );
-
-  promises.push(
-    Observable.delay(3000).promise.then(() => {
-      console.log(`setting child.value = 22 with a delay of 3000ms`);
-      child.value = Observable.delay(3000).promise.then(() => 22);
-    })
-  );
-
-  promises.push(
-    Observable.delay(4000).promise.then(() => {
-      console.log(`setting child.value = 3 with a delay of 10ms`);
-      child.value = Observable.delay(10).promise.then(() => 3);
-    })
-  );
-
-  await Promise.all(promises);
+  // log the current values of the observables after a delay of 200ms to make sure the child promise is resolved and the parent observables have been initialized
+  Observable.delay(200).promise.then(() => {
+    console.log(
+      `child.value after creation: ${JSON.stringify(child.value, null, 2)}`
+    );
+  });
+  Observable.delay(200).promise.then(() => {
+    console.log(
+      `parent.value after creation: ${JSON.stringify(parent.value, null, 2)}`
+    );
+  });
+  Observable.delay(200).promise.then(() => {
+    console.log(
+      `grandparent.value after creation: ${JSON.stringify(
+        grandparent.value,
+        null,
+        2
+      )}`
+    );
+  });
+  // test a stale request that begins after a delay of 1000ms to allow for the creation of the observables, which resolve after some time; this first generation request (Promise) will begin first and end last (it will be stale)
+  Observable.delay(1000).promise.then(() => {
+    console.log(
+      `setting child.value = 22 beginning in 1000ms and ending in 3000ms`
+    );
+    child.value = Observable.delay(3000).promise.then(() => 22);
+  });
+  // this second Promise (request) will begin last and end first (it will invalidate the Promise with which it was running concurrently)
+  Observable.delay(2000).promise.then(() => {
+    console.log(
+      `setting child.value = 3 beginning in 2000ms and ending in 10ms`
+    );
+    child.value = Observable.delay(10).promise.then(() => 3);
+  });
+  // delay the test from completing for the duration
   const { promise } = Observable.delay(5000); // Adjust the delay time as needed
   await promise;
+  assertEquals(grandparent.value, 5);
 });

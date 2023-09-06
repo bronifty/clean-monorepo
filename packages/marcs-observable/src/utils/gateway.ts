@@ -1,4 +1,22 @@
-export class HttpGateway {
+export interface IHttpGatewayMethods {
+  get(path: string): Promise<any>;
+  post(path: string, requestDto: any): Promise<any>;
+  delete(path: string): Promise<any>;
+}
+
+export type IHttpGatewayProperties = {
+  data: { name: string; author: string }[];
+};
+
+export type IHttpGateway = IHttpGatewayMethods & IHttpGatewayProperties;
+
+export class HttpGatewayFactory {
+  static create(): IHttpGateway {
+    return new HttpGateway();
+  }
+}
+
+export class HttpGateway implements IHttpGateway {
   private requestCounter: number = 0;
   data = [
     { name: "Book 1", author: "Author 1" },
