@@ -6,6 +6,34 @@ import {
   booksParent,
   booksGrandParent,
 } from "../utils/store"; // observable data
+
+export interface IHttpGateway {
+  data: { name: string; author: string }[];
+  get(path: string): { result: { name: string; author: string }[] };
+  post(
+    path: string,
+    requestDto: { name: string; author: string }
+  ): { success: boolean };
+  delete(path: string): { success: boolean };
+}
+export class HttpGateway implements IHttpGateway {
+  data = [
+    { name: "Book 1", author: "Author 1" },
+    { name: "Book 2", author: "Author 2" },
+  ];
+  get = (path) => {
+    return { result: this.data };
+  };
+  post = (path, requestDto) => {
+    this.data.push(requestDto);
+    return { success: true };
+  }; // test
+  delete = (path) => {
+    this.data.length = 0;
+    return { success: true };
+  };
+}
+
 interface IRepository {
   subscribe(callback: Function): Function;
   publish(): void;
@@ -16,9 +44,14 @@ interface IRepository {
 class Repository implements IRepository {
   private _state: IObservable;
   apiUrl = "fakedata";
+  private httpGateway = new HttpGateway();
   constructor(init: IObservable) {
     this._state = init;
   }
+  load = () => {
+    const response = this.httpGateway.get(this.apiUrl);
+    this._state.value = response.result;
+  };
   subscribe = (callback: (value: any) => void): (() => void) => {
     return this._state.subscribe(callback);
   };
@@ -46,6 +79,7 @@ export class Presenter implements IPresenter {
     this.booksRepository = new Repository(observable);
   }
   load = (callback) => {
+    this.booksRepository.load();
     const unload = this.booksRepository.subscribe((repoModel) => {
       const presenterModel = repoModel.map((data) => {
         return { name: data.name, author: data.author };
