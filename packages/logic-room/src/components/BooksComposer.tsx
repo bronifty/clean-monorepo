@@ -7,6 +7,31 @@ import {
   booksGrandParent,
 } from "../utils/store"; // observable data
 
+export class Database {
+  data: { name: string; author: string }[] = [
+    { name: "Book 1", author: "Author 1" },
+    { name: "Book 2", author: "Author 2" },
+  ];
+
+  getData(): { name: string; author: string }[] {
+    return this.data;
+  }
+
+  insertData(newData: { name: string; author: string }): void {
+    this.data.push(newData);
+  }
+
+  clearData(): void {
+    this.data.length = 0;
+  }
+}
+
+export class DatabaseFactory {
+  static createDatabase(): Database {
+    return new Database();
+  }
+}
+
 export interface IHttpGateway {
   data: { name: string; author: string }[];
   get(path: string): { result: { name: string; author: string }[] };
@@ -16,23 +41,50 @@ export interface IHttpGateway {
   ): { success: boolean };
   delete(path: string): { success: boolean };
 }
+
 export class HttpGateway implements IHttpGateway {
-  data = [
-    { name: "Book 1", author: "Author 1" },
-    { name: "Book 2", author: "Author 2" },
-  ];
-  get = (path) => {
-    return { result: this.data };
+  private database: Database;
+
+  constructor(database: Database) {
+    this.database = database;
+  }
+
+  get data(): { name: string; author: string }[] {
+    return this.database.getData();
+  }
+
+  get = (path: string) => {
+    return { result: this.database.getData() };
   };
-  post = (path, requestDto) => {
-    this.data.push(requestDto);
+
+  post = (path: string, requestDto: { name: string; author: string }) => {
+    this.database.insertData(requestDto);
     return { success: true };
-  }; // test
-  delete = (path) => {
-    this.data.length = 0;
+  };
+
+  delete = (path: string) => {
+    this.database.clearData();
     return { success: true };
   };
 }
+
+// export class HttpGateway implements IHttpGateway {
+//   data = [
+//     { name: "Book 1", author: "Author 1" },
+//     { name: "Book 2", author: "Author 2" },
+//   ];
+//   get = (path) => {
+//     return { result: this.data };
+//   };
+//   post = (path, requestDto) => {
+//     this.data.push(requestDto);
+//     return { success: true };
+//   }; // test
+//   delete = (path) => {
+//     this.data.length = 0;
+//     return { success: true };
+//   };
+// }
 
 interface IRepository {
   subscribe(callback: Function): Function;
@@ -44,7 +96,8 @@ interface IRepository {
 class Repository implements IRepository {
   private _state: IObservable;
   apiUrl = "fakedata";
-  private httpGateway = new HttpGateway();
+  private httpGateway = new HttpGateway(DatabaseFactory.createDatabase());
+
   constructor(init: IObservable) {
     this._state = init;
   }
