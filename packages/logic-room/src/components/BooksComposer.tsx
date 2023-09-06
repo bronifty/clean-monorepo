@@ -62,9 +62,9 @@ export class Presenter implements IPresenter {
   };
 }
 
-interface BooksComposerProps {
+type BooksComposerProps = {
   observable: IObservable;
-}
+};
 
 export function BooksComposer({ observable }: BooksComposerProps) {
   const title = "booksComposer same as booksChild data";
