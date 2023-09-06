@@ -1,6 +1,3 @@
-import { ObservableFactory, IObservable } from "./observable";
-import httpGateway from "./gateway";
-
 class BooksRepository {
   programmersModel = null;
   apiUrl = "fakeurl";

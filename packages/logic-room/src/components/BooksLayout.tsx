@@ -8,8 +8,6 @@ import {
 export function BooksLayout() {
   return (
     <>
-      <BooksComposer />
-      <div></div>
       <BooksChild />
       <div></div>
       <BooksParent />

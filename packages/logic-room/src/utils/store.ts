@@ -1,7 +1,5 @@
-import {
-  ObservableFactory,
-  IObservable,
-} from "marcs-observable/src/utils/observable";
+import { ObservableFactory } from "marcs-observable/src/utils/observable";
+export type { IObservable } from "marcs-observable/src/utils/observable";
 // import { ObservableFactory, IObservable } from "./observable";
 
 const child = ObservableFactory.create(() => 1);

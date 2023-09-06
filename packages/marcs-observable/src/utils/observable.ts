@@ -1,6 +1,6 @@
 export interface IObservableMethods {
   publish(): void;
-  subscribe(handler: (current: any, previous: any) => void): void;
+  subscribe(handler: (current: any, previous: any) => void): () => void; // Updated return type
   push(item: any): void;
   compute(): void;
 }
