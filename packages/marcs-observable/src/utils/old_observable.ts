@@ -22,10 +22,6 @@ export class Observable implements IObservable {
   _dependencyArray: IObservable[] = [];
   private _lastPromiseId: number = 0;
   private _isComputing: boolean = false;
-  private _promiseQueue: Array<
-    [number, { promise: Promise<any>; clear: () => void }]
-  > = [];
-  private _generationCounter: number = 0;
 
   // private _pendingUpdates: Function[] = [];
   // private _isProcessingUpdates: boolean = false;
@@ -49,6 +45,15 @@ export class Observable implements IObservable {
       this._value = init;
     }
   }
+  // private processPendingUpdates() {
+  //   if (this._isProcessingUpdates) return;
+  //   this._isProcessingUpdates = true;
+  //   while (this._pendingUpdates.length > 0) {
+  //     const update = this._pendingUpdates.shift();
+  //     if (update) update();
+  //   }
+  //   this._isProcessingUpdates = false;
+  // }
   get value() {
     if (
       Observable._computeActive &&
@@ -62,37 +67,29 @@ export class Observable implements IObservable {
   set value(newVal) {
     this._previousValue = this._value;
     if (newVal instanceof Promise) {
-      this._generationCounter += 1;
-      const currentGeneration = this._generationCounter;
-      const promiseObject = {
-        promise: newVal,
-        clear: () => {}, // replace with your clear function
-      };
-      this._promiseQueue.push([currentGeneration, promiseObject]);
-      promiseObject.promise
+      newVal
         .then((resolvedVal) => {
-          if (currentGeneration === this._generationCounter) {
-            // This is the latest promise, resolve it
-            this._value = resolvedVal;
-            this.publish();
-          } else {
-            // This promise is stale, do nothing
-          }
-          this._promiseQueue = this._promiseQueue.filter(
-            ([generation, _]) => generation !== currentGeneration
-          );
+          this._value = resolvedVal;
+          this.publish();
         })
         .catch((error) => {
           console.error("Error resolving value:", error);
-          this._promiseQueue = this._promiseQueue.filter(
-            ([generation, _]) => generation !== currentGeneration
-          );
         });
     } else {
       this._value = newVal;
       this.publish();
     }
   }
+
+  // set value(newVal) {
+  //   this._value = newVal;
+  //   this.publish();
+  //   // enqueue calls to publish in case there are async values to prevent stale updates
+  //   // this._pendingUpdates.push(() => {
+  //   // this.publish();
+  //   // });
+  //   // this.processPendingUpdates();
+  // }
   subscribe = (handler: Function) => {
     if (!this._subscribers.includes(handler)) {
       this._subscribers.push(handler);
@@ -117,13 +114,16 @@ export class Observable implements IObservable {
       // A computation is already in progress, queue or discard this computation
       return;
     }
+
     this._isComputing = true;
     Observable._computeActive = this as IObservable;
     const computedValue = this._valueFn
       ? (this._valueFn as Function)(...this._valueFnArgs)
       : null;
+
     this._lastPromiseId += 1;
     const currentPromiseId = this._lastPromiseId;
+
     const handleComputedValue = (resolvedValue: any) => {
       if (currentPromiseId !== this._lastPromiseId) return; // Ignore stale promises
       Observable._computeActive = null;
