@@ -81,3 +81,15 @@ export function BooksComposer({ observable }: BooksComposerProps) {
     </div>
   );
 }
+
+export function BooksComposerLayout() {
+  return (
+    <>
+      <BooksComposer observable={booksChild} />
+      <div></div>
+      <BooksComposer observable={booksParent} />
+      <div></div>
+      <BooksComposer observable={booksGrandParent} />
+    </>
+  );
+}
