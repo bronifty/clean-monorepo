@@ -89,9 +89,10 @@ export class HttpGatewayFactory {
 }
 const booksHttpGateway = HttpGatewayFactory.createHttpGateway(booksDatabase);
 interface IRepository {
-  subscribe(callback: (value: any) => void): UnsubscribeFunction;
   publish(): ResultMessage;
-  post(data: DataRecordType): ResultMessage;
+  subscribe(callback: (value: any) => void): UnsubscribeFunction;
+  get(): ResultMessage;
+  set(data: DataRecordType): ResultMessage;
   delete(idx: number): ResultMessage;
   load(): ResultMessage;
 }
@@ -103,15 +104,23 @@ class Repository implements IRepository {
     this._state = init;
     this.httpGateway = httpGateway;
   }
-  subscribe = (callback: (value: any) => void): UnsubscribeFunction => {
-    return this._state.subscribe(callback);
-  };
   publish = (): ResultMessage => {
     this._state.publish();
     return { result: "success" };
   };
-  post = (data: DataRecordType): ResultMessage => {
+  subscribe = (callback: (value: any) => void): UnsubscribeFunction => {
+    return this._state.subscribe(callback);
+  };
+  get = (): ResultMessage => {
+    const response = this.httpGateway.get(this.apiUrl);
+    this._state.value = response.result;
+    return { result: "success" };
+  };
+  set = (data: DataRecordType): ResultMessage => {
     this._state.value = [...this._state.value, data];
+    this.httpGateway.post(this.apiUrl, data);
+    this.get();
+    this.publish();
     return { result: "success" };
   };
   delete = (idx: number): ResultMessage => {
@@ -119,11 +128,14 @@ class Repository implements IRepository {
       ...this._state.value.slice(0, idx),
       ...this._state.value.slice(idx + 1),
     ];
+    this.httpGateway.delete(this.apiUrl, idx);
+    this.get();
+    this.publish();
     return { result: "success" };
   };
   load = (): ResultMessage => {
-    const response = this.httpGateway.get(this.apiUrl);
-    this._state.value = response.result;
+    this.httpGateway.load();
+    this.get();
     return { result: "success" };
   };
 }
@@ -136,8 +148,8 @@ export class RepositoryFactory {
   }
 }
 export interface IPresenter {
-  load(callback: (value: any) => void): () => void;
-  post(fields: any): Promise<void>;
+  get(callback: (value: any) => void): () => void;
+  set(fields: any): Promise<void>;
   delete(idx: number): Promise<void>;
 }
 export class Presenter implements IPresenter {
@@ -145,7 +157,7 @@ export class Presenter implements IPresenter {
   constructor(observable: IObservable) {
     this.booksRepository = RepositoryFactory.createRepository(observable);
   }
-  load = (callback) => {
+  get = (callback) => {
     this.booksRepository.load();
     const unload = this.booksRepository.subscribe((repoModel) => {
       const presenterModel = repoModel.map((data) => {
@@ -156,8 +168,8 @@ export class Presenter implements IPresenter {
     this.booksRepository.publish();
     return unload;
   };
-  post = async (fields) => {
-    this.booksRepository.post(fields);
+  set = async (fields) => {
+    this.booksRepository.set(fields);
   };
   delete = async (idx) => {
     this.booksRepository.delete(idx);
@@ -171,9 +183,9 @@ export class PresenterFactory {
 
 function main() {
   const booksPresenter = PresenterFactory.createPresenter(booksChild);
-  booksPresenter.load((value) => {
+  booksPresenter.get((value) => {
     console.log(value);
   });
-  booksPresenter.post({ name: "dummy title", author: "dummy author" });
+  booksPresenter.set({ name: "dummy title", author: "dummy author" });
 }
 main();
