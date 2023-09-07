@@ -5,24 +5,33 @@ import {
   booksChild,
   booksParent,
   booksGrandParent,
-} from "../utils/store"; // observable data
+} from "../utils/store";
+
+export type DataRecordType = { name: string; author: string };
+export type RequestDTO = { result: DataRecordType[] }; // for the http.get
+export type UnsubscribeFunction = () => void;
+type ResultMessage = {
+  result: "success";
+};
+type CustomError = "custom error";
+
 export interface IDatabase {
-  data: DatabaseDataType;
-  getData(): DatabaseDataType;
-  insertData(newData: { name: string; author: string }): void;
+  select(): DataRecordType[];
+  insert(dataRecord: DataRecordType): ResultMessage;
   clearData(): void;
 }
 export type DatabaseDataType = { name: string; author: string }[];
 export class Database implements IDatabase {
-  data: DatabaseDataType;
-  constructor(initialData: DatabaseDataType) {
+  data: DataRecordType[];
+  constructor(initialData: DataRecordType[]) {
     this.data = initialData;
   }
-  getData(): DatabaseDataType {
+  select(): DatabaseDataType {
     return this.data;
   }
-  insertData(newData: { name: string; author: string }): void {
-    this.data.push(newData);
+  insert(dataRecord: DataRecordType): ResultMessage {
+    this.data.push(dataRecord);
+    return { result: "success" };
   }
   clearData(): void {
     this.data.length = 0;
@@ -52,10 +61,10 @@ export class HttpGateway implements IHttpGateway {
     this.database = database;
   }
   get = (path: string) => {
-    return { result: this.database.getData() };
+    return { result: this.database.select() };
   };
   post = (path: string, requestDto: { name: string; author: string }) => {
-    this.database.insertData(requestDto);
+    this.database.insert(requestDto);
     return { success: true };
   };
   delete = (path: string) => {

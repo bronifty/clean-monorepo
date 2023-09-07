@@ -1,6 +1,7 @@
-import { ObservableFactory } from "marcs-observable/src/utils/observable";
-export type { IObservable } from "marcs-observable/src/utils/observable";
-// import { ObservableFactory, IObservable } from "./observable";
+import { ObservableFactory } from "./observable.ts";
+export type { IObservable } from "./observable.ts";
+// import { ObservableFactory } from "marcs-observable/src/utils";
+// export type { IObservable } from "marcs-observable/src/utils";
 
 const child = ObservableFactory.create(() => 1);
 const parent = ObservableFactory.create(() => child.value + 1);

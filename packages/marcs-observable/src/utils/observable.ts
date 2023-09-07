@@ -74,6 +74,7 @@ export class Observable implements IObservable {
           if (currentGeneration === this._generationCounter) {
             // This is the latest promise, resolve it
             this._value = resolvedVal;
+            // loop over the promise queue and cancel each; observable constructor should also take an optional cancel function but default to the fetch abort controller
             this.publish();
           } else {
             // This promise is stale, do nothing
