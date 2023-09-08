@@ -24,23 +24,29 @@ export interface IDatabase {
 }
 export type DatabaseDataType = { name: string; author: string }[];
 export class Database implements IDatabase {
-  data: DataRecordType[];
+  private _value: DataRecordType[];
   constructor(initialData: DataRecordType[]) {
-    this.data = initialData;
+    this._value = initialData;
+  }
+  get value() {
+    return this._value;
+  }
+  set value(newValue) {
+    this._value = newValue;
   }
   select(): DatabaseDataType {
-    return this.data;
+    return this._value;
   }
   insert(dataRecord: DataRecordType): ResultMessage {
-    this.data.push(dataRecord);
+    this._value.push(dataRecord);
     return { result: "success" };
   }
   delete(idx: number): ResultMessage {
-    this.data = [...this.data.slice(0, idx), ...this.data.slice(idx + 1)];
+    this._value = [...this._value.slice(0, idx), ...this._value.slice(idx + 1)];
     return { result: "success" };
   }
   load(): ResultMessage {
-    this.data = [
+    this._value = [
       { name: "Book 1", author: "Author 1" },
       { name: "Book 2", author: "Author 2" },
     ];
@@ -74,7 +80,7 @@ export class HttpGateway implements IHttpGateway {
   };
   post = (path: string, dataRecord: DataRecordType): ResultMessage => {
     this.database.insert(dataRecord);
-    return { result: "success" };
+    return { result: this.database.select() };
   };
   delete = (path: string, idx: number): ResultMessage => {
     this.database.delete(idx);
@@ -130,8 +136,10 @@ class Repository implements IRepository {
     return { result: "success" };
   };
   post = (data: DataRecordType): ResultMessage => {
-    this.httpGateway.post(this.apiUrl, data);
-    this.get();
+    const { result } = this.httpGateway.post(this.apiUrl, data);
+    // this.get();
+    this._state.value = result;
+    this.notifyDataSubscribers();
     // Making a deep copy of the array before adding the new data
     // const currentData = JSON.parse(JSON.stringify(this._state.value));
     // console.log(`currentData ${currentData}`);
@@ -220,57 +228,6 @@ export class PresenterFactory {
   }
 }
 
-// // booksChild
-// const childDatabase = DatabaseFactory.createDatabase([]);
-// const childHttpGateway = HttpGatewayFactory.createHttpGateway(childDatabase);
-// const childRepository = RepositoryFactory.createRepository(
-//   booksChild,
-//   childHttpGateway
-// );
-// const childPresenter = PresenterFactory.createPresenter(childRepository);
-
-// // // booksParent
-// // const parentDatabase = DatabaseFactory.createDatabase([]);
-// // const parentHttpGateway = HttpGatewayFactory.createHttpGateway(parentDatabase);
-// // const parentRepository = RepositoryFactory.createRepository(
-// //   booksParent,
-// //   parentHttpGateway
-// // );
-// // const parentPresenter = PresenterFactory.createPresenter(parentRepository);
-
-// // // booksGrandParent
-// // const grandParentDatabase = DatabaseFactory.createDatabase([]);
-// // const grandParentHttpGateway =
-// //   HttpGatewayFactory.createHttpGateway(grandParentDatabase);
-// // const grandParentRepository = RepositoryFactory.createRepository(
-// //   booksGrandParent,
-// //   grandParentHttpGateway
-// // );
-// // const grandParentPresenter = PresenterFactory.createPresenter(
-// //   grandParentRepository
-// // );
-
-// // function repoSubs() {
-// //   childRepository.subscribeToDataUpdates((newData) => {
-// //     parentRepository.setStateWithoutNotification(newData);
-// //     parentRepository.notifyDataSubscribers();
-// //   });
-
-// //   parentRepository.subscribeToDataUpdates((newData) => {
-// //     grandParentRepository.setStateWithoutNotification(newData);
-// //     grandParentRepository.notifyDataSubscribers();
-// //   });
-// // }
-// // repoSubs();
-
-// function main() {
-//   childPresenter.load((value) => {
-//     console.log(value);
-//   });
-//   childPresenter.post({ name: "dummy title", author: "dummy author" });
-// }
-// main();
-
 // booksChild
 const childDatabase = DatabaseFactory.createDatabase([]);
 const childHttpGateway = HttpGatewayFactory.createHttpGateway(childDatabase);
@@ -303,13 +260,17 @@ const grandParentPresenter = PresenterFactory.createPresenter(
 
 function repoSubs() {
   childRepository.subscribeToDataUpdates((newData) => {
-    parentRepository._state.value = newData;
-    parentRepository.notifySubscribersToUpdate();
+    // parentRepository.post(newData);
+    parentDatabase.value = newData;
+    parentRepository.setStateWithoutNotification(newData);
+    parentRepository.notifyDataSubscribers();
   });
 
   parentRepository.subscribeToDataUpdates((newData) => {
-    grandParentRepository._state.value = newData;
-    grandParentRepository.notifySubscribersToUpdate();
+    // grandParentRepository.post(newData);
+    grandParentDatabase.value = newData;
+    grandParentRepository.setStateWithoutNotification(newData);
+    grandParentRepository.notifyDataSubscribers();
   });
 }
 repoSubs();
