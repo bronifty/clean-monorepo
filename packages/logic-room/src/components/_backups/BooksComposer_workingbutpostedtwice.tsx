@@ -118,32 +118,21 @@ class Repository implements IRepository {
     return this._state.subscribe(callback);
   };
   get = (): ResultMessage => {
-    const { result } = this.httpGateway.get(this.apiUrl);
-    this._state.value = result;
-    return { result: "success" };
-    // const response = this.httpGateway.get(this.apiUrl);
+    const response = this.httpGateway.get(this.apiUrl);
     // this._state.value = response.result;
-    // return { result: "success" };
-  };
-  set = (data: DataRecordType): ResultMessage => {
-    this._state.value = [...this._state.value, data];
     return { result: "success" };
   };
+  // set = (data: DataRecordType): ResultMessage => {
+  //   this._state.value = [...this._state.value, data];
+  //   return { result: "success" };
+  // };
   post = (data: DataRecordType): ResultMessage => {
     this.httpGateway.post(this.apiUrl, data);
-    this.get();
-    // Making a deep copy of the array before adding the new data
-    // const currentData = JSON.parse(JSON.stringify(this._state.value));
-    // console.log(`currentData ${currentData}`);
-    // this._state.value = [...currentData, data];
-    // this._state.value = [...this._state.value, data];
+    this._state.value = [...this._state.value, data];
     // this.get();
-    // this.notifyDataSubscribers();
+    this.notifyDataSubscribers();
     // this.publish(); // this.get retrieves data and sets this._state.value with it, which calls the observable's own publish method internally. no need for an extra publish
     return { result: "success" };
-  };
-  setStateWithoutNotification = (data: DatabaseDataType): void => {
-    this._state.value = data;
   };
   delete = (idx: number): ResultMessage => {
     this.httpGateway.delete(this.apiUrl, idx);
@@ -194,7 +183,7 @@ export class Presenter implements IPresenter {
   }
   load = (callback) => {
     this.booksRepository.load();
-    // this.booksRepository.get();
+    this.booksRepository.get();
     const unload = this.booksRepository.subscribe((repoModel) => {
       const presenterModel = repoModel.map((data) => {
         return { name: data.name, author: data.author };
@@ -219,57 +208,6 @@ export class PresenterFactory {
     return new Presenter(repository);
   }
 }
-
-// // booksChild
-// const childDatabase = DatabaseFactory.createDatabase([]);
-// const childHttpGateway = HttpGatewayFactory.createHttpGateway(childDatabase);
-// const childRepository = RepositoryFactory.createRepository(
-//   booksChild,
-//   childHttpGateway
-// );
-// const childPresenter = PresenterFactory.createPresenter(childRepository);
-
-// // // booksParent
-// // const parentDatabase = DatabaseFactory.createDatabase([]);
-// // const parentHttpGateway = HttpGatewayFactory.createHttpGateway(parentDatabase);
-// // const parentRepository = RepositoryFactory.createRepository(
-// //   booksParent,
-// //   parentHttpGateway
-// // );
-// // const parentPresenter = PresenterFactory.createPresenter(parentRepository);
-
-// // // booksGrandParent
-// // const grandParentDatabase = DatabaseFactory.createDatabase([]);
-// // const grandParentHttpGateway =
-// //   HttpGatewayFactory.createHttpGateway(grandParentDatabase);
-// // const grandParentRepository = RepositoryFactory.createRepository(
-// //   booksGrandParent,
-// //   grandParentHttpGateway
-// // );
-// // const grandParentPresenter = PresenterFactory.createPresenter(
-// //   grandParentRepository
-// // );
-
-// // function repoSubs() {
-// //   childRepository.subscribeToDataUpdates((newData) => {
-// //     parentRepository.setStateWithoutNotification(newData);
-// //     parentRepository.notifyDataSubscribers();
-// //   });
-
-// //   parentRepository.subscribeToDataUpdates((newData) => {
-// //     grandParentRepository.setStateWithoutNotification(newData);
-// //     grandParentRepository.notifyDataSubscribers();
-// //   });
-// // }
-// // repoSubs();
-
-// function main() {
-//   childPresenter.load((value) => {
-//     console.log(value);
-//   });
-//   childPresenter.post({ name: "dummy title", author: "dummy author" });
-// }
-// main();
 
 // booksChild
 const childDatabase = DatabaseFactory.createDatabase([]);
@@ -334,7 +272,7 @@ export function BooksComposer({ presenter, title }) {
     <div>
       <h2>{title}</h2>
       <MapWithDeleteBtns dataValue={dataValue} presenter={presenter} />
-      <FormPost presenter={presenter} />
+      <FormPost data={presenter} />
     </div>
   );
 }
