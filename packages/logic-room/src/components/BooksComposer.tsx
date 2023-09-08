@@ -102,6 +102,7 @@ interface IRepository {
 }
 class Repository implements IRepository {
   private _state: IObservable;
+  private _dataSubscribers = [];
   apiUrl = "fakedata";
   private httpGateway: IHttpGateway;
   constructor(init: IObservable, httpGateway: IHttpGateway) {
@@ -128,6 +129,7 @@ class Repository implements IRepository {
     this._state.value = [...this._state.value, data];
     this.httpGateway.post(this.apiUrl, data);
     this.get();
+    this.notifyDataSubscribers();
     // this.publish(); // this.get retrieves data and sets this._state.value with it, which calls the observable's own publish method internally. no need for an extra publish
     return { result: "success" };
   };
@@ -146,6 +148,20 @@ class Repository implements IRepository {
     this.get();
     return { result: "success" };
   };
+  subscribeToDataUpdates = (callback) => {
+    this._dataSubscribers.push(callback);
+    return () => {
+      const index = this._dataSubscribers.indexOf(callback);
+      if (index > -1) {
+        this._dataSubscribers.splice(index, 1);
+      }
+    };
+  };
+  notifyDataSubscribers(): void {
+    for (const subscriber of this._dataSubscribers) {
+      subscriber(this._state.value);
+    }
+  }
 }
 export class RepositoryFactory {
   static createRepository(
@@ -221,6 +237,19 @@ const grandParentRepository = RepositoryFactory.createRepository(
 const grandParentPresenter = PresenterFactory.createPresenter(
   grandParentRepository
 );
+
+function repoSubs() {
+  childRepository.subscribeToDataUpdates((newData) => {
+    parentRepository._state.value = newData;
+    parentRepository.notifySubscribersToUpdate();
+  });
+
+  parentRepository.subscribeToDataUpdates((newData) => {
+    grandParentRepository._state.value = newData;
+    grandParentRepository.notifySubscribersToUpdate();
+  });
+}
+repoSubs();
 
 // type BooksComposerProps = {
 //   observable: IObservable;
