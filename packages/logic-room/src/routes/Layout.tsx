@@ -9,7 +9,6 @@ export function Layout() {
         <a href="/">Home</a>
         <a href="/dependents">Dependents</a>
         <a href="/books">Books</a>
-        <a href="/composer">Composer</a>
       </nav>
       <main className="content">
         <Outlet />

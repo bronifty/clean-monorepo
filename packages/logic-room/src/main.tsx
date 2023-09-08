@@ -5,7 +5,7 @@ import "./index.css";
 import { Layout } from "./routes/Layout";
 import { Index } from "./routes/Index";
 import ErrorPage from "./error-page";
-import { BooksLayout, DescendantsLayout } from "./components";
+import { DescendantsLayout } from "./components";
 import { BooksComposerLayout } from "./components/BooksComposer";
 
 const router = createBrowserRouter([
@@ -22,12 +22,9 @@ const router = createBrowserRouter([
         path: "dependents/",
         element: <DescendantsLayout />,
       },
+
       {
         path: "books/",
-        element: <BooksLayout />,
-      },
-      {
-        path: "composer/",
         element: <BooksComposerLayout />,
       },
     ],
