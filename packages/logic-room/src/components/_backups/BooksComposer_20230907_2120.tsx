@@ -1,9 +1,12 @@
+import React from "react";
+import { FormPost, MapWithDeleteBtns } from "ui/src/components";
+
 import {
   IObservable,
   booksChild,
   booksParent,
   booksGrandParent,
-} from "./store.ts";
+} from "../utils/store";
 
 export type DataRecordType = { name: string; author: string };
 export type RequestDTO = { result: DataRecordType[] }; // for the http.get
@@ -49,12 +52,12 @@ export class DatabaseFactory {
     return new Database(initialData);
   }
 }
-// const initialData = [];
+const initialData = [];
 // const initialData = [
 //   { name: "Book 1", author: "Author 1" },
 //   { name: "Book 2", author: "Author 2" },
 // ];
-// const booksDatabase = DatabaseFactory.createDatabase(initialData);
+const booksDatabase = DatabaseFactory.createDatabase(initialData);
 export interface IHttpGateway {
   get(path: string): { result: { name: string; author: string }[] };
   post(path: string, dataRecord: DataRecordType): ResultMessage;
@@ -87,13 +90,12 @@ export class HttpGatewayFactory {
     return new HttpGateway(database);
   }
 }
-// const booksHttpGateway = HttpGatewayFactory.createHttpGateway(booksDatabase);
+const booksHttpGateway = HttpGatewayFactory.createHttpGateway(booksDatabase);
 interface IRepository {
   publish(): ResultMessage;
   subscribe(callback: (value: any) => void): UnsubscribeFunction;
   get(): ResultMessage;
   set(data: DataRecordType): ResultMessage;
-  post(data: DataRecordType): ResultMessage;
   delete(idx: number): ResultMessage;
   load(): ResultMessage;
 }
@@ -119,13 +121,9 @@ class Repository implements IRepository {
   };
   set = (data: DataRecordType): ResultMessage => {
     this._state.value = [...this._state.value, data];
-    return { result: "success" };
-  };
-  post = (data: DataRecordType): ResultMessage => {
-    this._state.value = [...this._state.value, data];
     this.httpGateway.post(this.apiUrl, data);
     this.get();
-    // this.publish(); // this.get retrieves data and sets this._state.value with it, which calls the observable's own publish method internally. no need for an extra publish
+    this.publish();
     return { result: "success" };
   };
   delete = (idx: number): ResultMessage => {
@@ -147,7 +145,7 @@ class Repository implements IRepository {
 export class RepositoryFactory {
   static createRepository(
     observable: IObservable,
-    httpGateway: IHttpGateway
+    httpGateway: IHttpGateway = booksHttpGateway
   ): Repository {
     return new Repository(observable, httpGateway);
   }
@@ -159,8 +157,8 @@ export interface IPresenter {
 }
 export class Presenter implements IPresenter {
   private booksRepository: IRepository;
-  constructor(repository: IRepository) {
-    this.booksRepository = repository;
+  constructor(observable: IObservable) {
+    this.booksRepository = RepositoryFactory.createRepository(observable);
   }
   get = (callback) => {
     this.booksRepository.load();
@@ -176,31 +174,47 @@ export class Presenter implements IPresenter {
   set = async (fields) => {
     this.booksRepository.set(fields);
   };
-  post = async (fields) => {
-    this.booksRepository.post(fields);
-  };
   delete = async (idx) => {
     this.booksRepository.delete(idx);
   };
 }
 export class PresenterFactory {
-  static createPresenter(repository: IRepository): Presenter {
-    return new Presenter(repository);
+  static createPresenter(observable: IObservable): Presenter {
+    return new Presenter(observable);
   }
 }
 
-function main({ observable }) {
-  const database = DatabaseFactory.createDatabase([]);
-  const httpGateway = HttpGatewayFactory.createHttpGateway(database);
-  const repository = RepositoryFactory.createRepository(
-    observable,
-    httpGateway
+type BooksComposerProps = {
+  observable: IObservable;
+};
+export function BooksComposer({ observable }: BooksComposerProps) {
+  const title = `${observable._valueFn}`;
+  const booksPresenter = PresenterFactory.createPresenter(observable);
+  const [dataValue, setDataValue] = React.useState([]);
+  React.useEffect(() => {
+    const dataSubscription = booksPresenter.get((value) => {
+      setDataValue(value);
+    });
+    return () => {
+      dataSubscription();
+    };
+  }, []);
+  return (
+    <div>
+      <h2>{title}</h2>
+      <MapWithDeleteBtns dataValue={dataValue} presenter={booksPresenter} />
+      <FormPost data={booksPresenter} />
+    </div>
   );
-  const presenter = PresenterFactory.createPresenter(repository);
-
-  presenter.get((value) => {
-    console.log(value);
-  });
-  presenter.set({ name: "dummy title", author: "dummy author" });
 }
-main({ observable: booksChild });
+export function BooksComposerLayout() {
+  return (
+    <>
+      <BooksComposer observable={booksChild} />
+      <div></div>
+      <BooksComposer observable={booksParent} />
+      <div></div>
+      <BooksComposer observable={booksGrandParent} />
+    </>
+  );
+}

@@ -1,6 +1,6 @@
 import React from "react";
 
-export function Form({ data }) {
+export function FormPost({ data }) {
   const defaultValues = {
     name: "",
     author: "",
@@ -11,7 +11,7 @@ export function Form({ data }) {
   }
   const handleSubmit = (e) => {
     e.preventDefault();
-    data.set(fields);
+    data.post(fields);
     setFields(defaultValues);
   };
   return (

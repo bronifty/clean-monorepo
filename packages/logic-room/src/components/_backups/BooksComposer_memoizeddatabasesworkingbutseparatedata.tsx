@@ -1,9 +1,12 @@
+import React from "react";
+import { FormPost, MapWithDeleteBtns } from "ui/src/components";
+
 import {
   IObservable,
   booksChild,
   booksParent,
   booksGrandParent,
-} from "./store.ts";
+} from "../utils/store";
 
 export type DataRecordType = { name: string; author: string };
 export type RequestDTO = { result: DataRecordType[] }; // for the http.get
@@ -189,18 +192,80 @@ export class PresenterFactory {
   }
 }
 
-function main({ observable }) {
-  const database = DatabaseFactory.createDatabase([]);
-  const httpGateway = HttpGatewayFactory.createHttpGateway(database);
-  const repository = RepositoryFactory.createRepository(
-    observable,
-    httpGateway
-  );
-  const presenter = PresenterFactory.createPresenter(repository);
+// function main({ observable }) {
+//   const database = DatabaseFactory.createDatabase([]);
+//   const httpGateway = HttpGatewayFactory.createHttpGateway(database);
+//   const repository = RepositoryFactory.createRepository(
+//     observable,
+//     httpGateway
+//   );
+//   const presenter = PresenterFactory.createPresenter(repository);
 
-  presenter.get((value) => {
-    console.log(value);
-  });
-  presenter.set({ name: "dummy title", author: "dummy author" });
+//   presenter.get((value) => {
+//     console.log(value);
+//   });
+//   presenter.set({ name: "dummy title", author: "dummy author" });
+// }
+// main({ observable: booksChild });
+
+type BooksComposerProps = {
+  observable: IObservable;
+};
+export function BooksComposer({ observable }: BooksComposerProps) {
+  const [dataValue, setDataValue] = React.useState([]);
+  const title = `${observable._valueFn}`;
+
+  const database = React.useMemo(() => DatabaseFactory.createDatabase([]), []);
+  const httpGateway = React.useMemo(
+    () => HttpGatewayFactory.createHttpGateway(database),
+    []
+  );
+  const repository = React.useMemo(
+    () => RepositoryFactory.createRepository(observable, httpGateway),
+    []
+  );
+  const presenter = React.useMemo(
+    () => PresenterFactory.createPresenter(repository),
+    []
+  );
+
+  // const database = DatabaseFactory.createDatabase([]);
+  // const httpGateway = HttpGatewayFactory.createHttpGateway(database);
+  // const repository = RepositoryFactory.createRepository(
+  //   observable,
+  //   httpGateway
+  // );
+  // const presenter = PresenterFactory.createPresenter(repository);
+
+  // presenter.get((value) => {
+  //   console.log(value);
+  // });
+  // presenter.set({ name: "dummy title", author: "dummy author" });
+
+  React.useEffect(() => {
+    const dataSubscription = presenter.get((value) => {
+      setDataValue(value);
+    });
+    return () => {
+      dataSubscription();
+    };
+  }, []);
+  return (
+    <div>
+      <h2>{title}</h2>
+      <MapWithDeleteBtns dataValue={dataValue} presenter={presenter} />
+      <FormPost data={presenter} />
+    </div>
+  );
 }
-main({ observable: booksChild });
+export function BooksComposerLayout() {
+  return (
+    <>
+      <BooksComposer observable={booksChild} />
+      <div></div>
+      <BooksComposer observable={booksParent} />
+      <div></div>
+      <BooksComposer observable={booksGrandParent} />
+    </>
+  );
+}

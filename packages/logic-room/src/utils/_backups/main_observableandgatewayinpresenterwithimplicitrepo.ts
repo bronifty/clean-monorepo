@@ -159,8 +159,11 @@ export interface IPresenter {
 }
 export class Presenter implements IPresenter {
   private booksRepository: IRepository;
-  constructor(repository: IRepository) {
-    this.booksRepository = repository;
+  constructor(observable: IObservable, httpGateway: IHttpGateway) {
+    this.booksRepository = RepositoryFactory.createRepository(
+      observable,
+      httpGateway
+    );
   }
   get = (callback) => {
     this.booksRepository.load();
@@ -184,23 +187,29 @@ export class Presenter implements IPresenter {
   };
 }
 export class PresenterFactory {
-  static createPresenter(repository: IRepository): Presenter {
-    return new Presenter(repository);
+  static createPresenter(
+    observable: IObservable,
+    httpGateway: IHttpGateway
+  ): Presenter {
+    return new Presenter(observable, httpGateway);
   }
 }
 
 function main({ observable }) {
   const database = DatabaseFactory.createDatabase([]);
   const httpGateway = HttpGatewayFactory.createHttpGateway(database);
-  const repository = RepositoryFactory.createRepository(
+  // const repository = RepositoryFactory.createRepository(
+  //   observable,
+  //   httpGateway
+  // );
+  const booksPresenter = PresenterFactory.createPresenter(
     observable,
     httpGateway
   );
-  const presenter = PresenterFactory.createPresenter(repository);
 
-  presenter.get((value) => {
+  booksPresenter.get((value) => {
     console.log(value);
   });
-  presenter.set({ name: "dummy title", author: "dummy author" });
+  booksPresenter.set({ name: "dummy title", author: "dummy author" });
 }
 main({ observable: booksChild });
