@@ -1,9 +1,12 @@
+import React from "react";
+import { FormPost, MapWithDeleteBtns } from "ui/src/components";
+
 import {
   IObservable,
   booksChild,
   booksParent,
   booksGrandParent,
-} from "./store.ts";
+} from "../utils/store";
 
 export type DataRecordType = { name: string; author: string };
 export type RequestDTO = { result: DataRecordType[] }; // for the http.get
@@ -42,12 +45,12 @@ export class Database implements IDatabase {
     this._value = [...this._value.slice(0, idx), ...this._value.slice(idx + 1)];
     return { result: "success" };
   }
-  load(): RequestDTO {
+  load(): ResultMessage {
     this._value = [
       { name: "Book 1", author: "Author 1" },
       { name: "Book 2", author: "Author 2" },
     ];
-    return { result: this._value };
+    return { result: "success" };
   }
 }
 export class DatabaseFactory {
@@ -84,7 +87,9 @@ export class HttpGateway implements IHttpGateway {
     return { result: "success" };
   };
   load = (): RequestDTO => {
-    return this.database.load();
+    this.database.load();
+    const { result } = this.get("fakeurl");
+    return { result };
   };
 }
 export class HttpGatewayFactory {
@@ -105,13 +110,11 @@ interface IRepository {
 class Repository implements IRepository {
   private _state: IObservable;
   private _dataSubscribers = [];
-  private _valueFn;
   apiUrl = "fakedata";
   private httpGateway: IHttpGateway;
   constructor(init: IObservable, httpGateway: IHttpGateway) {
     this._state = init;
     this.httpGateway = httpGateway;
-    this._valueFn = this._state._valueFn;
   }
   publish = (): ResultMessage => {
     this._state.publish();
@@ -197,17 +200,17 @@ export class Presenter implements IPresenter {
   constructor(repository: IRepository) {
     this.booksRepository = repository;
   }
-  subscribe = (callback) => {
-    return this.booksRepository.subscribe((repoModel) => {
+  load = (callback) => {
+    this.booksRepository.load();
+    // this.booksRepository.get();
+    const unload = this.booksRepository.subscribe((repoModel) => {
       const presenterModel = repoModel.map((data) => {
         return { name: data.name, author: data.author };
       });
       callback(presenterModel);
     });
-  };
-  load = () => {
-    this.booksRepository.load();
     this.booksRepository.publish();
+    return unload;
   };
   set = async (fields) => {
     this.booksRepository.set(fields);
@@ -272,30 +275,41 @@ function repoSubs() {
 }
 repoSubs();
 
-function main() {
-  childPresenter.subscribe((value) => {
-    console.log(
-      `childPresenter.subscribe (value) => console.log(${JSON.stringify(
-        value,
-        null,
-        2
-      )})`
-    );
-  });
-  parentPresenter.subscribe((value) => {
-    console.log(
-      `parentPresenter.subscribe (value) => console.log(${JSON.stringify(
-        value,
-        null,
-        2
-      )})`
-    );
-  });
-  console.log(`childPresenter.load()`);
-  childPresenter.load();
-  console.log(
-    `childPresenter.post({ name: "dummy title", author: "dummy author" });`
+// type BooksComposerProps = {
+//   observable: IObservable;
+// };
+export function BooksComposer({ presenter, title }) {
+  const [dataValue, setDataValue] = React.useState([]);
+
+  // const title = `${observable._valueFn}`;
+
+  React.useEffect(() => {
+    const dataSubscription = presenter.load((value) => {
+      setDataValue(value);
+    });
+    return () => {
+      dataSubscription();
+    };
+  }, []);
+  return (
+    <div>
+      <h2>{title}</h2>
+      <MapWithDeleteBtns dataValue={dataValue} presenter={presenter} />
+      <FormPost presenter={presenter} />
+    </div>
   );
-  childPresenter.post({ name: "dummy title", author: "dummy author" });
 }
-main();
+export function BooksComposerLayout() {
+  return (
+    <>
+      <BooksComposer presenter={childPresenter} title={"childPresenter"} />
+      <div></div>
+      <BooksComposer presenter={parentPresenter} title={"parentPresenter"} />
+      <div></div>
+      <BooksComposer
+        presenter={grandParentPresenter}
+        title={"grandParentPresenter"}
+      />
+    </>
+  );
+}

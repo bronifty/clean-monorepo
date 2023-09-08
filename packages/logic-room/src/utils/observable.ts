@@ -16,7 +16,7 @@ export class Observable implements IObservable {
   private _value: any;
   private _previousValue: any;
   private _subscribers: Function[] = [];
-  private _valueFn: Function | null = null;
+  _valueFn: Function | null = null;
   private _valueFnArgs: any[] = [];
   static _computeActive: IObservable | null = null;
   _dependencyArray: IObservable[] = [];

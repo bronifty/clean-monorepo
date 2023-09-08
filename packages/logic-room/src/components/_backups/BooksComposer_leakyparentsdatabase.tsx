@@ -1,9 +1,18 @@
+import React from "react";
+import { FormPost, MapWithDeleteBtns } from "ui/src/components";
+
 import {
   IObservable,
   booksChild,
   booksParent,
   booksGrandParent,
-} from "./store.ts";
+} from "../utils/store";
+// import {
+//   IObservable,
+//   booksChild,
+//   booksParent,
+//   booksGrandParent,
+// } from "./store.ts";
 
 export type DataRecordType = { name: string; author: string };
 export type RequestDTO = { result: DataRecordType[] }; // for the http.get
@@ -299,3 +308,43 @@ function main() {
   childPresenter.post({ name: "dummy title", author: "dummy author" });
 }
 main();
+
+// type BooksComposerProps = {
+//   observable: IObservable;
+// };
+export function BooksComposer({ presenter, title }) {
+  const [dataValue, setDataValue] = React.useState([]);
+
+  // const title = `${observable._valueFn}`;
+
+  React.useEffect(() => {
+    const dataSubscription = presenter.subscribe((value) => {
+      setDataValue(value);
+    });
+    presenter.load();
+    return () => {
+      dataSubscription();
+    };
+  }, []);
+  return (
+    <div>
+      <h2>{title}</h2>
+      <MapWithDeleteBtns dataValue={dataValue} presenter={presenter} />
+      <FormPost presenter={presenter} />
+    </div>
+  );
+}
+export function BooksComposerLayout() {
+  return (
+    <>
+      <BooksComposer presenter={childPresenter} title={"childPresenter"} />
+      <div></div>
+      <BooksComposer presenter={parentPresenter} title={"parentPresenter"} />
+      <div></div>
+      <BooksComposer
+        presenter={grandParentPresenter}
+        title={"grandParentPresenter"}
+      />
+    </>
+  );
+}
