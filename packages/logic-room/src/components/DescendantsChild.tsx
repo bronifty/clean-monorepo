@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  booksChild,
-  booksParent,
-  booksGrandParent,
-  child,
-  parent,
-  grandparent,
-} from "../utils/store";
+import { child } from "../utils/store";
 
 export function DescendantsChild() {
   const data = child;

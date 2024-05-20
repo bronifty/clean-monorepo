@@ -1,10 +1,10 @@
 import React from "react";
 
-interface FormData {
-  value: { name: string; author: string }[];
+interface Presenter {
+  post: (fields: { name: string; author: string }) => void;
 }
 
-export default function Form({ data }: { data: FormData }) {
+export function FormPost({ presenter }: { presenter: Presenter }) {
   const defaultValues = {
     name: "",
     author: "",
@@ -15,7 +15,7 @@ export default function Form({ data }: { data: FormData }) {
   }
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    data.value = [...data.value, fields];
+    presenter.post(fields);
     setFields(defaultValues);
   };
   return (

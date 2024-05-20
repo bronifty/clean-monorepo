@@ -4,4 +4,7 @@ export * from "./BooksChild";
 export * from "./BooksParent";
 export * from "./BooksGrandParent";
 export * from "./BooksComposer";
-export * from "./BooksComposerLayout";
+export * from "./FormPost";
+export * from "./MapWithDeleteBtns";
+export * from "./Header";
+export * from "./CounterButton";

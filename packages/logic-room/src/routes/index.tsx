@@ -1,4 +1,5 @@
-import { Header, CounterButton } from "ui/src/components";
+import React from "react";
+import { Header, CounterButton } from "../components";
 
 export function Index() {
   return (

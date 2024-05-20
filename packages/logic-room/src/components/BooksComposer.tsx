@@ -1,5 +1,7 @@
 import React from "react";
-import { FormPost, MapWithDeleteBtns } from "ui/src/components";
+// import { FormPost, MapWithDeleteBtns } from "../components";
+import { MapWithDeleteBtns } from "./MapWithDeleteBtns.tsx";
+import { FormPost } from "./FormPost.tsx";
 import {
   IObservable,
   booksChild,
@@ -17,7 +19,7 @@ type CustomError = "custom error";
 
 export interface IDatabase {
   select(): DataRecordType[];
-  insert(dataRecord: DataRecordType): ResultMessage;
+  insert(dataRecord: DataRecordType): ResultMessage | CustomError;
   clearData(): void;
 }
 export type DatabaseDataType = { name: string; author: string }[];
@@ -61,13 +63,22 @@ export class HttpGateway implements IHttpGateway {
     this.database = database;
   }
   get = (path: string) => {
+    if (path === "/specialPath") {
+      // insert special case
+    }
     return { result: this.database.select() };
   };
   post = (path: string, requestDto: { name: string; author: string }) => {
+    if (path === "/specialPath") {
+      // insert special case
+    }
     this.database.insert(requestDto);
     return { success: true };
   };
   delete = (path: string) => {
+    if (path === "/specialPath") {
+      // insert special case
+    }
     this.database.clearData();
     return { success: true };
   };
@@ -103,10 +114,10 @@ class Repository implements IRepository {
   publish = () => {
     this._state.publish();
   };
-  post = (data) => {
+  post = (data: DataRecordType) => {
     this._state.value = [...this._state.value, data];
   };
-  delete = (idx) => {
+  delete = (idx: number) => {
     this._state.value = [
       ...this._state.value.slice(0, idx),
       ...this._state.value.slice(idx + 1),
@@ -131,21 +142,23 @@ export class Presenter implements IPresenter {
   constructor(observable: IObservable) {
     this.booksRepository = RepositoryFactory.createRepository(observable);
   }
-  load = (callback) => {
+  load = (callback: (value: any) => void): (() => void) => {
     this.booksRepository.load();
-    const unload = this.booksRepository.subscribe((repoModel) => {
-      const presenterModel = repoModel.map((data) => {
-        return { name: data.name, author: data.author };
-      });
-      callback(presenterModel);
-    });
+    const unload = this.booksRepository.subscribe(
+      (repoModel: DataRecordType[]) => {
+        const presenterModel = repoModel.map((data: DataRecordType) => {
+          return { name: data.name, author: data.author };
+        });
+        callback(presenterModel);
+      }
+    );
     this.booksRepository.publish();
-    return unload;
+    return () => unload(); // Ensure this matches the () => void signature
   };
-  post = async (fields) => {
+  post = async (fields: DataRecordType) => {
     this.booksRepository.post(fields);
   };
-  delete = async (idx) => {
+  delete = async (idx: number) => {
     this.booksRepository.delete(idx);
   };
 }
@@ -158,7 +171,7 @@ type BooksComposerProps = {
   observable: IObservable;
 };
 export function BooksComposer({ observable }: BooksComposerProps) {
-  const title = `${observable._valueFn}`;
+  const title = `${(observable as any)._valueFn}`;
   const booksPresenter = PresenterFactory.createPresenter(observable);
   const [dataValue, setDataValue] = React.useState([]);
   React.useEffect(() => {

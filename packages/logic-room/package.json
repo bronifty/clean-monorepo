@@ -11,15 +11,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.3.0",
+    "marcs-observable": "^1.0.4",
+    "react": "^19.0.0-rc-d3ce0d3ea9-20240520",
+    "react-dom": "^19.0.0-rc-d3ce0d3ea9-20240520",
     "react-router-dom": "^6.15.0",
-    "ui": "*",
-    "marcs-observable": "*"
+    "ui": "*"
   },
   "devDependencies": {
-    "@types/react": "^18.2.15",
-    "@types/react-dom": "^18.2.7",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react-swc": "^3.3.2",

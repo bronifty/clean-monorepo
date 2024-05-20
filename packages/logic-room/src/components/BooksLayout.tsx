@@ -1,9 +1,5 @@
-import {
-  BooksComposer,
-  BooksChild,
-  BooksParent,
-  BooksGrandParent,
-} from "../components";
+import React from "react";
+import { BooksChild, BooksParent, BooksGrandParent } from "../components";
 
 export function BooksLayout() {
   return (

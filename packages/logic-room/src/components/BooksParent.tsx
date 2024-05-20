@@ -1,13 +1,6 @@
 import React from "react";
 import Form from "./Form";
-import {
-  booksChild,
-  booksParent,
-  booksGrandParent,
-  child,
-  parent,
-  grandparent,
-} from "../utils/store";
+import { booksParent } from "../utils/store";
 
 export function BooksParent() {
   const data = booksParent;

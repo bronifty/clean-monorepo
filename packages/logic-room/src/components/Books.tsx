@@ -1,10 +1,19 @@
 import React from "react";
 import Form from "./Form";
 
-export function Books({ data, title }) {
+interface BooksProps {
+  data: {
+    value: any; // Specify the correct type instead of 'any' if possible
+    subscribe: (callback: (value: any) => void) => () => void; // Adjust the types as necessary
+  };
+  title: string;
+}
+
+export function Books({ data, title }: BooksProps) {
   const [dataValue, setDataValue] = React.useState(data.value);
   React.useEffect(() => {
-    const dataSubscription = data.subscribe((value) => {
+    const dataSubscription = data.subscribe((value: any) => {
+      // Specify the correct type instead of 'any'
       setDataValue(value);
     });
     return () => {
